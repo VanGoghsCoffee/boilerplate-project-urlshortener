@@ -10,17 +10,17 @@ app.use(logRequests);
 const shortUrls = [];
 const successResObj = (originalUrl, shortUrl) => ({ original_url: originalUrl, short_url: shortUrl });
 const invalidResObj = { error: "invalid url" };
-const urlRegEx = /^((?:(https?):\/\/)?((?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9])\.(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9])\.)(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9])\.)(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9]))|(?:(?:(?:\w+\.){1,2}[\w]{2,3})))(?::(\d+))?((?:\/[\w]+)*)(?:\/|(\/[\w]+\.[\w]{3,4})|(\?(?:([\w]+=[\w]+)&)*([\w]+=[\w]+))?|\?(?:(wsdl|wadl))))$/g;
 
 function handleInvalidUrl(req, res, next) {
     const url = req.body["url"];
     req.isInvalid = false;
 
-    if (urlRegEx.test(url) === false) {
-        req.isInvalid = true;
-    }
-
-    next();
+    dns.lookup(url, { all: true }, (err, addresses) => {
+        if (err || addresses.length <= 0) {
+            req.isInvalid = true;
+        }
+        next();
+    });
 }
 
 function handleShortUrl(req, res, next) {
