@@ -1,8 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const app = express();
+const { logRequests } = require('./middlewares/logger');
 
+const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(logRequests);
 
 const shortUrls = [];
 const successResObj = (originalUrl, shortUrl) => ({ original_url: originalUrl, short_url: shortUrl });
