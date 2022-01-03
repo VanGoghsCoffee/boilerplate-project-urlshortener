@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const dns = require('dns');
 const { logRequests } = require('./middlewares/logger');
 
 const app = express();
@@ -10,17 +9,28 @@ app.use(logRequests);
 const shortUrls = [];
 const successResObj = (originalUrl, shortUrl) => ({ original_url: originalUrl, short_url: shortUrl });
 const invalidResObj = { error: "invalid url" };
+const protocolRegex = /^(http:|https:|ftp:)/gi;
+const protocolLookup = {
+    "http:": /^(http:\/\/)/gi,
+    "https:": /^(https:\/\/)/gi,
+    "ftp:": /^(ftp:\/\/)/gi
+}
 
 function handleInvalidUrl(req, res, next) {
     const url = req.body["url"];
     req.isInvalid = false;
 
-    dns.lookup(url, { all: true }, (err, addresses) => {
-        if (err || addresses.length <= 0) {
-            req.isInvalid = true;
-        }
-        next();
-    });
+    if (url === '') {
+        req.isInvalid = true;
+    }
+
+    const protocolMatches = url.match(protocolRegex);
+
+    if (protocolMatches.length && url.match(protocolLookup[protocolMatches[0]]) == null) {
+            req.isInvalid = true; 
+    }
+          
+    next();
 }
 
 function handleShortUrl(req, res, next) {
