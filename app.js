@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const dns = require('dns');
 const { logRequests } = require('./middlewares/logger');
 
 const app = express();
@@ -9,19 +10,16 @@ app.use(logRequests);
 const shortUrls = [];
 const successResObj = (originalUrl, shortUrl) => ({ original_url: originalUrl, short_url: shortUrl });
 const invalidResObj = { error: "invalid url" };
+const urlRegEx = /^((?:(https?):\/\/)?((?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9])\.(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9])\.)(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9])\.)(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9][0-9]|[0-9]))|(?:(?:(?:\w+\.){1,2}[\w]{2,3})))(?::(\d+))?((?:\/[\w]+)*)(?:\/|(\/[\w]+\.[\w]{3,4})|(\?(?:([\w]+=[\w]+)&)*([\w]+=[\w]+))?|\?(?:(wsdl|wadl))))$/g;
 
 function handleInvalidUrl(req, res, next) {
     const url = req.body["url"];
     req.isInvalid = false;
 
-    if (url === "")
-        req.isInvalid = true;
-    
-    try {
-        new URL(url);
-    } catch (TypeError) {
+    if (urlRegEx.test(url) === false) {
         req.isInvalid = true;
     }
+
     next();
 }
 
